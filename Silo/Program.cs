@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-
+using Grains;
 using Orleans;
 using Orleans.Runtime.Configuration;
 
@@ -28,6 +28,8 @@ namespace Silo
             // TODO: once the previous call returns, the silo is up and running.
             //       This is the place your custom logic, for example calling client logic
             //       or initializing an HTTP front end for accepting incoming requests.
+            GrainClient.GrainFactory.GetGrain<IOrchestratorGrain>(Guid.Empty).StartHeavyOperation().Wait();
+
 
             Console.WriteLine("Orleans Silo is running.\nPress Enter to terminate...");
             Console.ReadLine();
