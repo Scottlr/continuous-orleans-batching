@@ -8,6 +8,8 @@ namespace Grains
     /// </summary>
 	public interface IOrchestratorGrain : IGrainWithGuidKey
     {
-        Task StartHeavyOperation();
+        Task StartHeavyOperationBaseline();
+        Task StartHeavyOperationStreamed();
+        Task StartHeavyOperationsAttempt();
     }
 }

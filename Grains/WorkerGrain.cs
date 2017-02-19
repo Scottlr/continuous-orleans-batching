@@ -11,8 +11,8 @@ namespace Grains
     {
         public async Task DoWork(int delay)
         {
-            Console.WriteLine($"Id: {this.GetPrimaryKey()}, Duration: {delay}");
             await Task.Delay(delay);
+            Console.WriteLine($"Id: {this.GetPrimaryKey()}, Duration: {delay}");
         }
     }
 }

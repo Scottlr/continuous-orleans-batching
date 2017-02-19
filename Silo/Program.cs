@@ -31,7 +31,7 @@ namespace Silo
 
             try
             {
-                GrainClient.GrainFactory.GetGrain<IOrchestratorGrain>(Guid.Empty).StartHeavyOperation().Wait();
+                GrainClient.GrainFactory.GetGrain<IOrchestratorGrain>(Guid.Empty).StartHeavyOperationStreamed().Wait();
             }
             catch(Exception e)
             {
