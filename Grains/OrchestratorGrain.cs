@@ -12,29 +12,51 @@ namespace Grains
     /// </summary>
 	public class OrchestratorGrain : Grain, IOrchestratorGrain
     {
+        private Random rnd;
+
+        public override Task OnActivateAsync()
+        {
+            rnd = new Random();
+            return TaskDone.Done;
+        }
+
+        private Task ConstructGrainInvocation(int grainId)
+        {
+            var waitTime = rnd.Next(10, 250);
+            if (grainId % 7 == 0)
+            {
+                waitTime = rnd.Next(3000, 5000);
+            }
+            return GrainFactory.GetGrain<IWorkerGrain>(grainId).DoWork(waitTime);
+        }
+
         public async Task StartHeavyOperation()
         {
             Random r = new Random();
             List<int> grainIdentifiers = Enumerable.Range(0, 100).ToList();
-            const int batchSize = 9;
+            int totalBatchCount = grainIdentifiers.Count;
+            int batchSize = Environment.ProcessorCount;
             int batchOffset = 0;
-
-            while(grainIdentifiers.Any())
+            try
             {
-                var timer = Stopwatch.StartNew();
-                List<int> grainIdBatch = grainIdentifiers.Take(batchSize).ToList();
-                grainIdentifiers.RemoveRange(batchOffset, batchSize);
-                List<Task> tasksInBatch = new List<Task>();
-                foreach (int i in grainIdBatch)
+                while (grainIdentifiers.Any())
                 {
-                    tasksInBatch.Add(GrainFactory.GetGrain<IWorkerGrain>(i).DoWork(r.Next(10, 100)));
-                }
-                tasksInBatch.Add(GrainFactory.GetGrain<IWorkerGrain>((batchOffset + batchSize) + 1).DoWork(r.Next(4000, 4500)));
+                    var timer = Stopwatch.StartNew();
+                    List<int> grainIdBatch = grainIdentifiers.Take(batchSize).ToList();
+                    grainIdentifiers.RemoveRange(0, batchSize);
 
-                await Task.WhenAll(tasksInBatch);
-                batchOffset += batchSize;
-                timer.Stop();
-                Console.WriteLine($"Batch completed, took: {timer.ElapsedMilliseconds}");
+                    List<Task> tasksInBatch = grainIdBatch.Select(a => ConstructGrainInvocation(a)).ToList();
+                    await Task.WhenAll(tasksInBatch);
+                    timer.Stop();
+                    batchOffset++;
+
+                    Console.WriteLine($"Batch completed. Completed/Total: {batchOffset * batchSize}/{totalBatchCount}, took: {timer.ElapsedMilliseconds}");
+
+                }
+            }
+            catch(Exception e)
+            {
+               
             }
 
         }
